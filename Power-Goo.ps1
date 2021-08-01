@@ -7,7 +7,7 @@ function Power-Goo {
     Specify a query to be made. Browser is determined on user default.
     
     .PARAMETER contains
-    Specifies the requested query, required.
+    Specifies the requested query.
     
     .PARAMETER notcontains
     Specifies the terms to exclude from the query, comma deliminated.
@@ -21,8 +21,14 @@ function Power-Goo {
     .PARAMETER FileType
     Specifies the requested file type extension.
     
+    .PARAMETER Tail
+    Requests the last n number of lines from history file.
+
+    .PARAMETER Repeat
+    Repeats a line from the history file, see Tail.
+
     .INPUTS
-    None. You cannot pipe objects to Add-Extension.
+    None. You cannot pipe objects to Power-Goo.
     
     .OUTPUTS
     Outputs query as a Google search in the default browser of the user.
@@ -46,7 +52,7 @@ function Power-Goo {
        
            [CmdletBinding()]
            param (
-               [Parameter(Mandatory=$true,
+               [Parameter(Mandatory=$false,
                            HelpMessage='Specify content to include in query.')]
                [string]$contains,
            
@@ -68,8 +74,16 @@ function Power-Goo {
            
                [Parameter(Mandatory=$false,
                            HelpMessage='Specify a specifc file type  to query.')]
-               [string]$FileType
-       
+               [string]$FileType,
+
+               [Parameter(Mandatory=$false,
+                           HelpMessage='Repeat a previous search by index number (See -Tail or Log file)')]
+               [string]$Repeat,
+
+               [Parameter(Mandatory=$false,
+                           HelpMessage='Display the last x number of lines in the log file')]
+               [string]$Tail  
+              
            )
            
            #Initialize and determine user browser
@@ -95,8 +109,8 @@ function Power-Goo {
            $script:search_query = ''
                function Launch_Query {
                    Add-Type -AssemblyName System.Web
-                   Write-Host "$search_query"
-                   $encoded_query = [System.Web.HttpUtility]::UrlEncode("$search_query")
+                   Write-Host "$script:search_query"
+                   $encoded_query = [System.Web.HttpUtility]::UrlEncode("$script:search_query")
                    $query = "https://google.com/search?q=$encoded_query"
                    [system.Diagnostics.Process]::Start($browser, $query) | Out-Null
                                       
@@ -151,6 +165,26 @@ function Power-Goo {
                            }                 
                    }  
                }
+
+               function Tail{
+                    if ($Tail -ne [string]::Empty){
+                        $Line_Request = $Tail
+                        Get-Content $script:History_Path | Select-Object -Last $Line_Request
+                    }
+            }
+
+                function Repeat{
+                    if ($Repeat -ne [string]::Empty){
+                        $Rt = $Repeat +1
+                        $Line = Get-Content $script:History_Path | Select-Object -Index 4
+                        $script:search_query += (($Line -split (':',5))[4])
+                        Write-Host $script:search_query
+                        Launch_Query
+
+                    }
+                }
+
+               
                #Worker // Main        
                if ($contains -ne [string]::Empty){
                    Write-Host "Searching for: $contains"
@@ -161,6 +195,12 @@ function Power-Goo {
                    FileType
                    Launch_Query               
                }
+               elseif($Tail -ne [string]::Empty){
+                    Tail
+               }
+               elseif($Repeat -ne [string]::Empty){
+                   Repeat
+               }
                else{
                    Write-Host "No query"
                }  
@@ -169,19 +209,20 @@ function Power-Goo {
            #Create a logfile of previous searches, feel free to comment out or change pathing.
            END {
                
-                $History_Path = "$env:USERPROFILE\Documents\Power-Goo.txt"
-                Test-Path $History_Path
-                    if ($false){
-                        New-Item -Path $History_Path -ItemType File
-                        $DT = Get-Date
-                        Add-Content -Path $History_Path -Value "$DT : $script:search_query"
-                    }
-                    else{
-                        $DT = Get-Date
-                        Add-Content -Path $History_Path -Value "$DT : $script:search_query"
-                    }
+                $script:History_Path = "$env:USERPROFILE\Documents\Power-Goo.txt"
+                if($script:search_query -ne [string]::Empty){
+                    $DT = Get-Date
+                    Test-Path $script:History_Path | out-null                     
+                        if ($false){
+                            New-Item -Path $script:History_Path -ItemType File
+                            Add-Content -Path $script:History_Path -Value "1: $DT : $script:search_query"
+                        }
+                        else{
+                            $Current_Count = (Get-Content $script:History_Path).Length + 1
+                            Add-Content -Path $script:History_Path -Value "$Current_Count : $DT : $script:search_query"
+                        } 
            
-           
+                   }
            }
            
            }
