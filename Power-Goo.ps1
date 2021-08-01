@@ -12,7 +12,7 @@ function Power-Goo {
     .PARAMETER notcontains
     Specifies the terms to exclude from the query, comma deliminated.
 
-    .PARAMETER notcontains
+    .PARAMETER include
     Specifies the terms to include from the base query, comma deliminated.
     
     .PARAMETER Domains
@@ -37,7 +37,7 @@ function Power-Goo {
     .NOTES
         File Name      : Power-Goo.ps1
         Version        : v.0.1
-        Author         : Rp_Null
+        Author         : RpNull
         Prerequisite   : PowerShell
         Created        : 1 Aug 21
         Change Date    : 
@@ -55,7 +55,7 @@ function Power-Goo {
                [string]$notcontains,
 
                 [Parameter(Mandatory=$false,
-                           HelpMessage='Specify content to exclude in query.')]
+                           HelpMessage='Specify content to include in addition to base query.')]
                [string]$include,
        
                [Parameter(Mandatory=$false,
@@ -168,6 +168,7 @@ function Power-Goo {
            
            #Create a logfile of previous searches, feel free to comment out or change pathing.
            END {
+               
                 $History_Path = "$env:USERPROFILE\Documents\Power-Goo.txt"
                 Test-Path $History_Path
                     if ($false){
