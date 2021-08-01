@@ -32,7 +32,7 @@ function Power-Goo {
     
     
     .LINK
-    Online version: ADD WHEN PUSHED IDIOT
+    Online version: https://github.com/RpNull/Power-Goo
     
     .NOTES
         File Name      : Power-Goo.ps1
