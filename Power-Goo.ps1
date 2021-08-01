@@ -176,7 +176,7 @@ function Power-Goo {
                 function Repeat{
                     if ($Repeat -ne [string]::Empty){
                         $Rt = $Repeat +1
-                        $Line = Get-Content $script:History_Path | Select-Object -Index 4
+                        $Line = Get-Content $script:History_Path | Select-Object -Index $Rt
                         $script:search_query += (($Line -split (':',5))[4])
                         Write-Host $script:search_query
                         Launch_Query
